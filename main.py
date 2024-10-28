@@ -2,7 +2,6 @@ import requests
 import sys
 from bs4 import BeautifulSoup
 
-
 def extract_article_data(article_url):
     response = requests.get(article_url)
     soup = BeautifulSoup(response.content, "html.parser")
@@ -29,7 +28,6 @@ def extract_article_data(article_url):
         "external_urls": external_urls,
         "categories": category_names
     }
-
 
 def main(category_name):
     category_url = f"https://pl.wikipedia.org/wiki/Kategoria:{category_name.replace(' ', '_')}"
@@ -59,7 +57,6 @@ def main(category_name):
 
     # Wyświetlenie wyników w odpowiednim formacie dla testów
     print("\n".join(results))
-
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
