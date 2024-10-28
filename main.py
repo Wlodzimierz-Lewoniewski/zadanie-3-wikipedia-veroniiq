@@ -1,4 +1,5 @@
 import requests
+import sys
 from bs4 import BeautifulSoup
 
 
@@ -30,13 +31,15 @@ def extract_article_data(article_url):
     }
 
 
-def main():
-    # Pobranie kategorii od użytkownika
-    category_name = input().strip()
+def main(category_name):
     category_url = f"https://pl.wikipedia.org/wiki/Kategoria:{category_name.replace(' ', '_')}"
 
     # Pobranie listy artykułów z kategorii
     response = requests.get(category_url)
+    if response.status_code != 200:
+        print("Nie udało się pobrać kategorii. Sprawdź, czy kategoria istnieje.")
+        return
+
     soup = BeautifulSoup(response.content, "html.parser")
 
     # Pobieranie linków do pierwszych dwóch artykułów z kategorii
@@ -57,5 +60,11 @@ def main():
     # Wyświetlenie wyników w odpowiednim formacie dla testów
     print("\n".join(results))
 
+
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 2:
+        print("Użycie: python main.py <nazwa_kategorii>")
+        sys.exit(1)
+
+    category_name = sys.argv[1]
+    main(category_name)
