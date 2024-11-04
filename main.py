@@ -1,3 +1,4 @@
+import sys
 import requests
 from bs4 import BeautifulSoup
 
@@ -65,8 +66,9 @@ def main(category_name):
     print("\n".join(results))
 
 if __name__ == "__main__":
-    import sys
-
-    # Getting input directly from the test cases
-    category_name = sys.argv[1]  # The input will be provided by the autograding test
-    main(category_name)
+    # Ensure the input is passed correctly
+    if len(sys.argv) < 2:
+        print("Brak podanego argumentu. Upewnij się, że wprowadzono nazwę kategorii.")
+    else:
+        category_name = sys.argv[1]  # The input will be provided by the autograding test
+        main(category_name)
