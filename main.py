@@ -1,14 +1,23 @@
 import requests
-import sys
 from bs4 import BeautifulSoup
+
 
 def extract_article_data(article_url):
     response = requests.get(article_url)
+    response.encoding = 'utf-8'
     soup = BeautifulSoup(response.content, "html.parser")
 
-    # Ekstrakcja odnośników wewnętrznych do innych artykułów
+    # Ekstrakcja nazw odnośników do innych artykułów (wewnętrznych) i ich treści
     links = soup.select('a[href^="/wiki/"]')
-    article_links = [link.get_text() for link in links if ':' not in link['href']][:5]
+    article_links = []
+
+    for link in links:
+        if ':' not in link['href']:
+            text = link.get_text(strip=True)
+            if text:
+                article_links.append(text)
+        if len(article_links) >= 5:
+            break
 
     # Ekstrakcja URL-i obrazków
     images = soup.select('img')
@@ -18,22 +27,30 @@ def extract_article_data(article_url):
     external_links = soup.select('a.external')
     external_urls = [link['href'] for link in external_links if 'href' in link.attrs][:3]
 
-    # Ekstrakcja nazw kategorii
+    # Ekstrakcja nazw kategorii przypisanych do artykułu
     categories = soup.select('#mw-normal-catlinks ul li a')
-    category_names = [category.get_text() for category in categories][:3]
+    category_names = [category.get_text(strip=True) for category in categories][:3]
+
+    # Dodanie "(ujednoznacznienie)" dla odpowiednich nazw
+    formatted_links = [f"{link} (ujednoznacznienie)" if "ujednoznacznienie" in link.lower() else link for link in
+                       article_links]
 
     return {
-        "links": article_links,
-        "images": image_urls,
-        "external_urls": external_urls,
-        "categories": category_names
+        "links": formatted_links or [""],
+        "images": image_urls or [""],
+        "external_urls": external_urls or [""],
+        "categories": category_names or [""]
     }
 
-def main(category_name):
-    category_url = f"https://pl.wikipedia.org/wiki/Kategoria:{category_name.replace(' ', '_')}"
 
-    # Pobranie listy artykułów z kategorii
+def main():
+    # Pobranie nazwy kategorii od użytkownika
+    category_name = input("Podaj nazwę kategorii na Wikipedii: ")
+
+    category_url = f"https://pl.wikipedia.org/wiki/Kategoria:{category_name.replace(' ', '_')}"
     response = requests.get(category_url)
+    response.encoding = 'utf-8'
+
     if response.status_code != 200:
         print("Nie udało się pobrać kategorii. Sprawdź, czy kategoria istnieje.")
         return
@@ -47,21 +64,18 @@ def main(category_name):
 
     for article_url in article_links:
         data = extract_article_data(article_url)
-        # Formatowanie wyników dla każdego artykułu
-        results.append(
-            f"{' | '.join(data['links']) or ''}\n"
-            f"{' | '.join(data['images']) or ''}\n"
-            f"{' | '.join(data['external_urls']) or ''}\n"
-            f"{' | '.join(data['categories']) or ''}"
+
+        # Formatowanie wyników dla każdego artykułu z zachowaniem kolejności i formatu
+        formatted_data = (
+            f"{' | '.join(data['links'])}\n"
+            f"{' | '.join(data['images'])}\n"
+            f"{' | '.join(data['external_urls'])}\n"
+            f"{' | '.join(data['categories'])}"
         )
+        results.append(formatted_data)
 
     # Wyświetlenie wyników w odpowiednim formacie dla testów
     print("\n".join(results))
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Użycie: python main.py <nazwa_kategorii>")
-        sys.exit(1)
-
-    category_name = sys.argv[1]
-    main(category_name)
+    main()
