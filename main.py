@@ -1,4 +1,3 @@
-import sys
 import requests
 from bs4 import BeautifulSoup
 
@@ -72,7 +71,5 @@ def main(category_name):
     print("\n".join(results))
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        sys.exit(1)  # Wyjdź bez błędu, aby umożliwić systemowi oceniania obsługę go.
-    category_name = sys.argv[1]
-    main(category_name)
+    category_name = input().strip()
+    main()
