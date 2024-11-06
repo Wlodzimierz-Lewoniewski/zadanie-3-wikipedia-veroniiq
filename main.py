@@ -34,7 +34,7 @@ def extract_article_data(article_url):
     }
 
 def main():
-    category_name = input("Podaj nazwę kategorii: ").strip()
+    category_name = input().strip()
     category_url = f"https://pl.wikipedia.org/wiki/Kategoria:{category_name.replace(' ', '_')}"
     response = requests.get(category_url)
     response.encoding = 'utf-8'
