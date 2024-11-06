@@ -45,7 +45,8 @@ def extract_article_data(article_url):
         "categories": category_names or [""]
     }
 
-def main(category_name):
+def main():
+    category_name = input().strip()
     category_url = f"https://pl.wikipedia.org/wiki/Kategoria:{category_name.replace(' ', '_')}"
     response = requests.get(category_url)
     response.encoding = 'utf-8'
@@ -71,5 +72,4 @@ def main(category_name):
     print("\n".join(results))
 
 if __name__ == "__main__":
-    category_name = input().strip()
     main()
