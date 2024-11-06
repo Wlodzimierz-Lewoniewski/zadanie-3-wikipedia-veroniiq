@@ -7,15 +7,7 @@ def extract_article_data(article_url):
     soup = BeautifulSoup(response.content, "html.parser")
 
     links = soup.select('a[href^="/wiki/"]')
-    article_links = []
-
-    for link in links:
-        if ':' not in link['href']:
-            text = link.get_text(strip=True)
-            if text:
-                article_links.append(text)
-        if len(article_links) >= 5:
-            break
+    article_links = [link.get_text() for link in links if ':' not in link['href']][:5]
 
     # Pobieranie obrazów z formatowaniem zgodnie z wymaganiami
     images = soup.select('img')
