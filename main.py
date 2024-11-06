@@ -30,7 +30,7 @@ def extract_article_data(article_url):
         "links": formatted_links or [""],
         "images": image_urls or [""],
         "external_urls": external_urls or [""],
-        "categories": category_links or [""]
+        "categories": formatted_categories or [""]
     }
 
 def main():
