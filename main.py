@@ -1,55 +1,52 @@
 import requests
-from bs4 import BeautifulSoup
+import re
 
 def extract_article_data(article_url):
     response = requests.get(article_url)
     response.encoding = 'utf-8'
-    soup = BeautifulSoup(response.content, "html.parser")
+    html_content = response.text
 
-    links = soup.select('a[href^="/wiki/"]')
-    article_links = [link.get_text() for link in links if ':' not in link['href']][:5]
+    # Wyrażenie regularne dla wewnętrznych linków (linki zaczynające się od "/wiki/" bez ujednoznacznienia)
+    internal_links = re.findall(r'href="/wiki/([^":#]+?)"', html_content)
+    article_links = [link.replace('_', ' ') for link in internal_links[:5]]  # Pierwsze 5 linków wewnętrznych
 
-    # Pobieranie obrazów z formatowaniem zgodnie z wymaganiami
-    images = soup.select('img')
-    image_urls = [
-        "//" + img['src'] for img in images if 'src' in img.attrs
-    ][:3]
+    # Wyrażenie regularne dla obrazów
+    image_urls = re.findall(r'src="(//upload\.wikimedia\.org/[^"]+)"', html_content)[:3]
+    formatted_image_urls = ["https:" + url for url in image_urls]  # Dodajemy "https:" do URL
 
-    # Pobieranie linków zewnętrznych z formatowaniem zgodnie z wymaganiami
-    external_links = soup.select('a.external')
-    external_urls = [
-        link['href'] for link in external_links if 'href' in link.attrs
-    ][:3]
+    # Wyrażenie regularne dla linków zewnętrznych
+    external_urls = re.findall(r'href="(https?://[^"]+)" class="external"', html_content)[:3]
 
-    # Pobieranie kategorii
-    categories = soup.select('#mw-normal-catlinks ul li a')
-    category_names = [category.get_text(strip=True) for category in categories][:3]
+    # Wyrażenie regularne dla kategorii (zakładam, że są w divie 'mw-normal-catlinks')
+    categories = re.findall(r'<div id="mw-normal-catlinks".*?>(.*?)</div>', html_content, re.DOTALL)
+    category_links = re.findall(r'title="Kategoria:[^"]+">([^<]+)', categories[0]) if categories else []
 
-    # Formatowanie linków wewnętrznych
+    # Formatowanie linków wewnętrznych - dodajemy "(ujednoznacznienie)", jeśli potrzeba
     formatted_links = [
-        f"{link} (ujednoznaczniczenie)" if "ujednoznacznienie" in link.lower() else link for link in article_links
+        f"{link} (ujednoznacznienie)" if "ujednoznacznienie" in link.lower() else link for link in article_links
     ]
 
     return {
         "links": formatted_links or [""],
-        "images": image_urls or [""],
+        "images": formatted_image_urls or [""],
         "external_urls": external_urls or [""],
-        "categories": category_names or [""]
+        "categories": category_links or [""]
     }
 
 def main():
-    category_name = input().strip()
+    category_name = input("Podaj nazwę kategorii: ").strip()
     category_url = f"https://pl.wikipedia.org/wiki/Kategoria:{category_name.replace(' ', '_')}"
     response = requests.get(category_url)
     response.encoding = 'utf-8'
+    html_content = response.text
 
-    soup = BeautifulSoup(response.content, "html.parser")
-
-    article_links = ["https://pl.wikipedia.org" + a['href'] for a in soup.select('.mw-category a')][:2]
+    # Wyszukiwanie linków do pierwszych dwóch artykułów w kategorii
+    article_urls = re.findall(r'href="(/wiki/[^":#]+?)"', html_content)[:2]
+    full_article_urls = ["https://pl.wikipedia.org" + url for url in article_urls]
 
     results = []
 
-    for article_url in article_links:
+    for article_url in full_article_urls:
         data = extract_article_data(article_url)
 
         # Formatowanie wyników dla obrazów i linków zewnętrznych
@@ -61,7 +58,8 @@ def main():
         )
         results.append(formatted_data)
 
-    print("\n".join(results))
+    # Wyświetlanie wyników
+    print("\n\n".join(results))
 
 if __name__ == "__main__":
     main()
