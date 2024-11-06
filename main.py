@@ -24,6 +24,7 @@ def extract_article_data(article_url):
     formatted_links = [
         f"{link} (ujednoznacznienie)" if "ujednoznacznienie" in link.lower() else link for link in article_links
     ]
+    formatted_categories = [category.strip() for category in category_links]
 
     return {
         "links": formatted_links or [""],
