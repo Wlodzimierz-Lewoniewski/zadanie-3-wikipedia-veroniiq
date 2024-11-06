@@ -12,7 +12,6 @@ def extract_article_data(article_url):
 
     # Wyrażenie regularne dla obrazów
     image_urls = re.findall(r'src="(//upload\.wikimedia\.org/[^"]+)"', html_content)[:3]
-    formatted_image_urls = ["https:" + url for url in image_urls]  # Dodajemy "https:" do URL
 
     # Wyrażenie regularne dla linków zewnętrznych
     external_urls = re.findall(r'href="(https?://[^"]+)" class="external"', html_content)[:3]
@@ -28,7 +27,7 @@ def extract_article_data(article_url):
 
     return {
         "links": formatted_links or [""],
-        "images": formatted_image_urls or [""],
+        "images": image_urls or [""],
         "external_urls": external_urls or [""],
         "categories": category_links or [""]
     }
